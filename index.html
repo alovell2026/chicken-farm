@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chicken Farm</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">SUNNYBROOK FARM • A CHICKEN GAME</p>
+        <h1>Chicken Farm <span aria-hidden="true">🐔</span></h1>
+        <p class="tagline">Open feeding lines, keep the chickens happy, and beat the clock!</p>
+      </div>
+      <div class="sun-badge" aria-hidden="true">☀️</div>
+    </header>
+
+    <section class="instructions panel">
+      <h2>How to play</h2>
+      <div class="instruction-steps">
+        <span>1️⃣ Choose feeding lines</span>
+        <span>2️⃣ Watch the waiting line</span>
+        <span>3️⃣ Keep chickens happy</span>
+        <span>4️⃣ Earn a big score</span>
+        <span>👆 Swipe the farm to add or remove lines</span>
+      </div>
+    </section>
+
+    <section class="dashboard">
+      <aside class="sidebar">
+        <section class="panel controls-panel play-controls">
+          <div>
+            <h2>Choose your feeding lines</h2>
+          </div>
+          <div class="control-actions">
+            <label for="servers">Feeding lines <output id="serversValue">2</output></label>
+            <input id="servers" type="range" min="1" max="6" step="1" value="2">
+            <div class="line-preview" id="linePreview">🐔 🐔</div>
+            <button id="startButton" class="primary">Start Level</button>
+            <button id="pauseButton" class="secondary" disabled>Pause</button>
+            <button id="resetButton" class="text-button">Reset farm</button>
+          </div>
+        </section>
+        <section class="panel level-panel">
+          <div class="panel-title-row"><h2>Level Info</h2><span id="levelBadge">LEVEL 1</span></div>
+          <div class="level-stat"><span>Current level</span><strong id="levelNumber">1</strong></div>
+          <div class="level-stat"><span>Level goal</span><strong id="goalText">Serve 15 chickens</strong></div>
+          <div class="level-stat"><span>Deaths allowed</span><strong id="deathLimitText">2</strong></div>
+          <div class="level-stat"><span>Budget left</span><strong id="budgetLeft">$90</strong></div>
+          <div class="level-stat"><span>Time left</span><strong id="timeLeft">60 s</strong></div>
+          <div id="levelStatus" class="status-box neutral">Pick some feeding lines, then press Start Level.</div>
+        </section>
+
+      </aside>
+
+      <section class="farm-area">
+        <div class="canvas-wrap">
+          <div class="stats-grid live-hud" aria-live="polite">
+            <div class="stat-card served-card"><span>Fed</span><strong id="servedCount">0</strong></div>
+            <div class="stat-card died-card"><span>Tired</span><strong id="diedCount">0</strong></div>
+            <div class="stat-card money-card"><span>Spent</span><strong id="moneySpent">$0</strong></div>
+            <div class="stat-card score-card"><span>Score</span><strong id="score">0</strong></div>
+          </div>
+          <canvas id="farmCanvas" width="960" height="560" aria-label="Animated Chicken Farm"></canvas>
+          <div class="canvas-caption"><span id="simulationClock">Farm clock: 0.0 s</span><span id="streakText">Streak: 0 🔥</span><span id="eventText">Ready for chickens</span></div>
+        </div>
+        <section class="panel legend">
+          <h2>Chicken types</h2>
+          <p><span class="dot normal"></span> Normal chicken — happy and speedy</p>
+          <p><span class="dot egg"></span> Egg-layer — takes longer to eat</p>
+          <p><span class="dot rooster"></span> Rooster — red and jumps forward!</p>
+        </section>
+      </section>
+    </section>
+  </main>
+  <script src="main.js"></script>
+</body>
+</html>

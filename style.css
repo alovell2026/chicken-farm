@@ -1,0 +1,63 @@
+:root {
+  --ink: #293b32; --muted: #6b7b6e; --paper: #fffdf6; --green: #3c8b58; --deep-green: #205638;
+  --yellow: #ffd44d; --orange: #f29a43; --red: #e54f45; --blue: #76cbed; --line: #d7e7d1;
+  font-family: "Trebuchet MS", Inter, system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; color: var(--ink); background: #dff3d5; }
+.app-shell { max-width: 1400px; margin: auto; padding: 24px; }
+.hero { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.eyebrow { margin: 0 0 7px; color: var(--green); font-size: .74rem; font-weight: 900; letter-spacing: .14em; }
+h1 { margin: 0 0 8px; color: var(--deep-green); font-family: Georgia, serif; font-size: clamp(2.4rem, 6vw, 4.5rem); line-height: .95; }
+.tagline { margin: 0; color: var(--muted); font-size: 1.05rem; }
+.sun-badge { display: grid; place-items: center; width: 90px; height: 90px; border-radius: 32px; background: var(--yellow); font-size: 3.4rem; box-shadow: 0 8px 0 #dfa936; transform: rotate(5deg); }
+.instructions { margin-bottom: 18px; padding: 14px 19px; }.instructions h2 { display: inline; margin-right: 20px; color: var(--deep-green); }.instruction-steps { display: inline-flex; flex-wrap: wrap; gap: 10px 20px; color: var(--muted); font-size: .9rem; font-weight: 900; }
+.dashboard { display: grid; grid-template-columns: 1fr; gap: 20px; }
+.sidebar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: start; gap: 15px; }
+.sidebar .legend { grid-column: 1 / -1; }
+.panel, .stat-card, .canvas-wrap { border: 2px solid var(--line); border-radius: 20px; background: var(--paper); box-shadow: 0 8px 20px rgba(46, 92, 54, .09); }
+.panel { padding: 19px; }
+h2 { margin: 0 0 11px; font-size: 1.08rem; }
+.kid-instruction { margin: 0 0 16px; padding: 12px; border: 2px dashed #e4bc45; border-radius: 13px; background: #fff3bd; color: #765a18; font-size: .92rem; line-height: 1.4; }
+label { display: flex; justify-content: space-between; margin: 15px 0 7px; font-size: 1.04rem; font-weight: 900; }
+output { color: var(--green); font-size: 1.2rem; }
+input[type="range"] { width: 100%; height: 30px; accent-color: var(--green); cursor: pointer; }
+.line-preview { min-height: 39px; margin: 5px 0 14px; color: var(--orange); font-size: 1.5rem; letter-spacing: 5px; }
+button { width: 100%; margin-top: 9px; padding: 13px 15px; border: 0; border-radius: 13px; font: inherit; font-weight: 900; cursor: pointer; transition: transform .15s, filter .15s; }
+button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); }
+button:disabled { cursor: not-allowed; opacity: .45; }
+.primary { color: white; background: var(--green); box-shadow: 0 4px 0 #2c6842; }
+.secondary { color: var(--deep-green); background: #e3f0dd; }
+.text-button { color: var(--muted); background: transparent; font-size: .83rem; box-shadow: none; }
+.panel-title-row { display: flex; align-items: center; justify-content: space-between; }
+#levelBadge { padding: 6px 9px; border-radius: 9px; color: #805d15; background: #fff0b5; font-size: .72rem; font-weight: 900; }
+.level-stat { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #edf3e9; font-size: .86rem; }
+.level-stat strong { color: var(--deep-green); text-align: right; }
+.status-box { margin-top: 15px; padding: 12px; border-radius: 12px; font-size: .86rem; font-weight: 900; line-height: 1.35; }
+.status-box.neutral { color: var(--muted); background: #f0f6ed; }
+.status-box.running { color: var(--deep-green); background: #e1f4df; }
+.status-box.success { color: #785a14; background: #fff0b3; }
+.status-box.failure { color: #9a3933; background: #ffe0db; }
+.legend p { margin: 9px 0 0; color: var(--muted); font-size: .82rem; }
+.farm-area .legend { margin-top: 14px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }.farm-area .legend h2 { margin: 0; }.farm-area .legend p { margin: 0; }
+.dot { display: inline-block; width: 13px; height: 13px; margin-right: 7px; border: 2px solid #9b8750; border-radius: 50%; vertical-align: -2px; }
+.dot.normal { background: #fff8db; }.dot.egg { background: var(--yellow); }.dot.rooster { background: var(--red); border-color: #a52d2d; }
+.farm-area { min-width: 0; }
+.play-controls { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.play-controls h2 { margin-bottom: 7px; }.play-controls .kid-instruction { margin: 0; max-width: 390px; }
+.control-actions { flex: 1; min-width: 250px; }.control-actions label { margin-top: 0; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; margin-top: 13px; }
+.stat-card { min-height: 86px; padding: 15px; }
+.stat-card span { display: block; margin-bottom: 7px; color: var(--muted); font-size: .78rem; font-weight: 900; }
+.stat-card strong { color: var(--deep-green); font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.served-card { border-color: #a9d8b1; }.died-card { border-color: #f0b7ae; }.money-card { border-color: #f1d889; }.score-card { border-color: #9fcde1; }
+.canvas-wrap { position: relative; overflow: hidden; background: var(--blue); }
+.canvas-wrap canvas { touch-action: none; cursor: pointer; }
+.live-hud { position: absolute; top: 12px; right: 12px; left: 12px; z-index: 2; margin: 0; pointer-events: none; }
+.live-hud .stat-card { min-height: 58px; padding: 8px 12px; border-width: 1px; background: rgba(255, 253, 246, .9); box-shadow: 0 4px 10px rgba(32, 86, 56, .14); }
+.live-hud .stat-card span { margin-bottom: 2px; font-size: .68rem; }.live-hud .stat-card strong { font-size: 1.16rem; }
+canvas { display: block; width: 100%; aspect-ratio: 12 / 7; }
+.canvas-caption { display: flex; justify-content: space-between; padding: 10px 15px; color: var(--muted); background: var(--paper); font-size: .78rem; font-weight: 800; }
+.tip { margin: 12px 4px; color: var(--muted); font-size: .84rem; }.tip strong { color: var(--deep-green); }
+@media (max-width: 900px) { .sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .app-shell { padding: 15px 10px; } .hero { align-items: flex-start; } .sun-badge { width: 60px; height: 60px; font-size: 2.1rem; } .sidebar { grid-template-columns: 1fr; } .legend { grid-column: auto; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .play-controls { display: block; position: static; }.control-actions { min-width: 0; margin-top: 12px; } .live-hud { top: 8px; right: 8px; left: 8px; gap: 6px; }.live-hud .stat-card { padding: 7px; }.live-hud .stat-card strong { font-size: 1rem; } }
