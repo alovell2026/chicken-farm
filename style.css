@@ -6,11 +6,12 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-height: 100vh; color: var(--ink); background: #dff3d5; }
 .app-shell { max-width: 1400px; margin: auto; padding: 24px; }
-.hero { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.hero { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }.hero-actions { display: flex; align-items: center; gap: 13px; }
 .eyebrow { margin: 0 0 7px; color: var(--green); font-size: .74rem; font-weight: 900; letter-spacing: .14em; }
 h1 { margin: 0 0 8px; color: var(--deep-green); font-family: Georgia, serif; font-size: clamp(2.4rem, 6vw, 4.5rem); line-height: .95; }
 .tagline { margin: 0; color: var(--muted); font-size: 1.05rem; }
 .sun-badge { display: grid; place-items: center; width: 90px; height: 90px; border-radius: 32px; background: var(--yellow); font-size: 3.4rem; box-shadow: 0 8px 0 #dfa936; transform: rotate(5deg); }
+.help-button { width: 38px; height: 38px; margin: 0; padding: 0; border: 3px solid var(--green); border-radius: 50%; color: var(--green); background: var(--paper); font-size: 1.25rem; box-shadow: none; }.help-tip { max-width: 390px; margin: 0 0 18px auto; padding: 12px 15px; border: 2px solid #e4bc45; border-radius: 13px; color: #765a18; background: #fff3bd; font-size: .86rem; line-height: 1.5; box-shadow: 0 5px 12px rgba(80, 84, 30, .1); }
 .instructions { margin-bottom: 18px; padding: 14px 19px; }.instructions h2 { display: inline; margin-right: 20px; color: var(--deep-green); }.instruction-steps { display: inline-flex; flex-wrap: wrap; gap: 10px 20px; color: var(--muted); font-size: .9rem; font-weight: 900; }
 .dashboard { display: grid; grid-template-columns: 1fr; gap: 20px; }
 .sidebar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: start; gap: 15px; }
@@ -50,6 +51,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .stat-card { min-height: 86px; padding: 15px; }
 .stat-card span { display: block; margin-bottom: 7px; color: var(--muted); font-size: .78rem; font-weight: 900; }
 .stat-card strong { color: var(--deep-green); font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.live-hud .stat-card strong { text-shadow: 0 0 10px rgba(255, 255, 255, .7); }
 .served-card { border-color: #a9d8b1; }.died-card { border-color: #f0b7ae; }.money-card { border-color: #f1d889; }.score-card { border-color: #9fcde1; }
 .canvas-wrap { position: relative; overflow: hidden; background: var(--blue); }
 .canvas-wrap canvas { touch-action: none; cursor: pointer; }
@@ -60,4 +62,4 @@ canvas { display: block; width: 100%; aspect-ratio: 12 / 7; }
 .canvas-caption { display: flex; justify-content: space-between; padding: 10px 15px; color: var(--muted); background: var(--paper); font-size: .78rem; font-weight: 800; }
 .tip { margin: 12px 4px; color: var(--muted); font-size: .84rem; }.tip strong { color: var(--deep-green); }
 @media (max-width: 900px) { .sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 600px) { .app-shell { padding: 15px 10px; } .hero { align-items: flex-start; } .sun-badge { width: 60px; height: 60px; font-size: 2.1rem; } .sidebar { grid-template-columns: 1fr; } .legend { grid-column: auto; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .play-controls { display: block; position: static; }.control-actions { min-width: 0; margin-top: 12px; } .live-hud { top: 8px; right: 8px; left: 8px; gap: 6px; }.live-hud .stat-card { padding: 7px; }.live-hud .stat-card strong { font-size: 1rem; } }
+@media (max-width: 600px) { .app-shell { padding: 15px 10px; } .hero { align-items: flex-start; } .hero-actions { gap: 7px; }.sun-badge { width: 60px; height: 60px; font-size: 2.1rem; } .sidebar { grid-template-columns: 1fr; } .legend { grid-column: auto; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .play-controls { display: block; position: static; }.control-actions { min-width: 0; margin-top: 12px; } .live-hud { top: 8px; right: 8px; left: 8px; gap: 6px; }.live-hud .stat-card { padding: 8px; }.live-hud .stat-card strong { font-size: 1.16rem; } }
