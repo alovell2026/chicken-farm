@@ -67,3 +67,48 @@ canvas { display: block; width: 100%; aspect-ratio: 12 / 7; }
 @media (max-width: 900px) { .sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 600px) { .app-shell { padding: 15px 10px; } .hero { align-items: flex-start; } .hero-actions { gap: 7px; }.sun-badge { width: 60px; height: 60px; font-size: 2.1rem; } .sidebar { grid-template-columns: 1fr; } .legend { grid-column: auto; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .play-controls { display: block; position: static; }.control-actions { min-width: 0; margin-top: 12px; } .live-hud { top: 5px; right: 6px; left: 6px; gap: 4px; }.live-hud .stat-card { min-height: 36px; padding: 4px 5px; }.live-hud .stat-card span { font-size: .52rem; }.live-hud .stat-card strong { font-size: .88rem; }.feeding-control { right: 8px; bottom: 8px; min-width: 180px; padding: 8px 10px; }.feeding-control input[type="range"] { width: 92px; } }
+
+/* Responsive game board: the farm is always clear, with controls beside it on wide screens. */
+.dashboard { grid-template-columns: 1fr; align-items: start; }
+.farm-visual, .farm-controls { min-width: 0; }
+.farm-controls { display: grid; gap: 14px; align-content: start; }
+.farm-controls .sidebar { grid-template-columns: 1fr; gap: 14px; }
+.farm-controls .upgrades-panel { grid-column: auto; }
+.farm-controls .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
+.farm-controls .legend { grid-column: auto; }
+.feeding-control { position: static; min-width: 0; width: 100%; }
+.live-hud { position: relative; z-index: 2; pointer-events: auto; }
+.canvas-wrap canvas { position: relative; z-index: 1; width: 100%; max-width: 100%; height: auto; max-height: 55vh; object-fit: contain; }
+
+@media (max-width: 899px) {
+  .dashboard { grid-template-columns: 1fr; }
+  .farm-controls { width: 100%; }
+  .farm-controls .sidebar { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .app-shell { padding: 14px 10px; }
+  .dashboard { gap: 14px; }
+  .farm-visual { order: 1; }
+  .farm-controls { order: 2; gap: 12px; }
+  .canvas-wrap { max-height: 55vh; }
+  .canvas-wrap canvas { max-height: 55vh; }
+  .live-hud { position: relative; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .live-hud .stat-card { min-height: 62px; padding: 9px 10px; }
+  .live-hud .stat-card span { font-size: .67rem; }
+  .live-hud .stat-card strong { font-size: 1.15rem; }
+  .feeding-control { padding: 10px 12px; }
+  .feeding-control input[type="range"] { width: 100%; }
+  .play-controls { display: block; }
+  .control-actions { min-width: 0; margin-top: 12px; }
+  .legend { grid-column: auto; }
+}
+
+@media (min-width: 900px) {
+  .dashboard { grid-template-columns: minmax(0, 1fr) 350px; gap: 20px; }
+  .farm-visual { grid-column: 1; }
+  .farm-controls { grid-column: 2; }
+  .canvas-wrap { width: 100%; }
+  .farm-controls .play-controls { display: block; }
+  .farm-controls .control-actions { min-width: 0; margin-top: 12px; }
+}
