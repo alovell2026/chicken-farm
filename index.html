@@ -39,12 +39,9 @@
       <aside class="sidebar">
         <section class="panel controls-panel play-controls">
           <div>
-            <h2>Choose your feeding lines</h2>
+            <h2>Game controls</h2>
           </div>
           <div class="control-actions">
-            <label for="servers">Feeding lines <output id="serversValue">2</output></label>
-            <input id="servers" type="range" min="1" max="12" step="1" value="2">
-            <div class="line-preview" id="linePreview">🐔 🐔</div>
             <button id="startButton" class="primary">Start Level</button>
             <button id="pauseButton" class="secondary" disabled>Pause</button>
             <button id="resetButton" class="text-button">Reset farm</button>
@@ -57,7 +54,13 @@
           <div class="level-stat"><span>Deaths allowed</span><strong id="deathLimitText">2</strong></div>
           <div class="level-stat"><span>Budget left</span><strong id="budgetLeft">$90</strong></div>
           <div class="level-stat"><span>Time left</span><strong id="timeLeft">60 s</strong></div>
+          <div class="level-stat"><span>Farm theme</span><strong id="themeText">☀️ Day</strong></div>
           <div id="levelStatus" class="status-box neutral">Pick some feeding lines, then press Start Level.</div>
+        </section>
+        <section class="panel upgrades-panel">
+          <h2>Upgrades</h2>
+          <p id="upgradeHint" class="muted">New farm helpers unlock every 5 levels.</p>
+          <div id="upgradeList" class="upgrade-list"><span>🔒 Keep playing to unlock helpers!</span></div>
         </section>
 
       </aside>
@@ -66,11 +69,23 @@
         <div class="canvas-wrap">
           <div class="stats-grid live-hud" aria-live="polite">
             <div class="stat-card served-card"><span>Fed</span><strong id="servedCount">0</strong></div>
-            <div class="stat-card died-card"><span>Tired</span><strong id="diedCount">0</strong></div>
+            <div class="stat-card died-card"><span>Dead</span><strong id="diedCount">0</strong></div>
             <div class="stat-card money-card"><span>Spent</span><strong id="moneySpent">$0</strong></div>
+            <div class="stat-card budget-card"><span>Budget left</span><strong id="budgetHud">$90</strong></div>
+            <div class="stat-card goal-card"><span>To level up</span><strong id="toLevelUp">15</strong></div>
             <div class="stat-card score-card"><span>Score</span><strong id="score">0</strong></div>
           </div>
           <canvas id="farmCanvas" width="960" height="560" aria-label="Animated Chicken Farm"></canvas>
+          <div class="feeding-control" role="group" aria-label="Feeding line controls">
+            <label for="servers">Feeding Lines</label>
+            <div class="feeding-control-row">
+              <button id="minusLines" class="line-button" type="button" aria-label="Remove one feeding line">−</button>
+              <input id="servers" type="range" min="1" max="12" step="1" value="2" aria-label="Number of feeding lines">
+              <button id="plusLines" class="line-button" type="button" aria-label="Add one feeding line">+</button>
+            </div>
+            <output id="serversValue">2</output>
+            <div class="line-preview" id="linePreview">🐔 🐔</div>
+          </div>
           <div class="canvas-caption"><span id="simulationClock">Farm clock: 0.0 s</span><span id="streakText">Streak: 0 🔥</span><span id="eventText">Ready for chickens</span></div>
         </div>
         <section class="panel legend">
