@@ -158,6 +158,11 @@ canvas { display: block; width: 100%; aspect-ratio: 12 / 7; }
   .live-hud .stat-card span { font-size: .62rem; }
   .live-hud .stat-card strong { font-size: 1.05rem; }
   .below-farm-panels { width: 100%; grid-template-columns: 1fr; }
+  /* Treat the live stats and Day Info as one compact information stack. */
+  .below-farm-panels { display: contents; }
+  .farm-controls > .live-hud { margin-bottom: 0; }
+  .below-farm-panels > .level-panel { order: 5; margin-top: 0; }
+  .below-farm-panels > .upgrades-panel { order: 6; margin-top: 0; }
   .below-farm-panels .panel { padding: 11px; border-radius: 14px; }
   .below-farm-panels .level-panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; }
   .below-farm-panels .level-panel .panel-title-row,
@@ -169,6 +174,19 @@ canvas { display: block; width: 100%; aspect-ratio: 12 / 7; }
   .below-farm-panels .upgrades-panel .muted { margin-bottom: 5px; font-size: .7rem; }
   .upgrade-list { gap: 5px; }
   .upgrade-list span { padding: 5px 7px; font-size: .69rem; }
+}
+
+@media (min-width: 480px) and (max-width: 700px) {
+  /* Wider phones can show the six stats and compact Day Info side by side. */
+  .dashboard { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 8px; }
+  .farm-visual > .canvas-wrap,
+  .farm-controls > .feeding-control,
+  .farm-controls > .sidebar,
+  .below-farm-panels > .upgrades-panel { grid-column: 1 / -1; }
+  .farm-controls > .live-hud { grid-column: 1; align-self: start; }
+  .below-farm-panels > .level-panel { grid-column: 2; align-self: start; }
+  .below-farm-panels .level-stat { font-size: .68rem; }
+  .below-farm-panels .level-stat strong { font-size: .72rem; }
 }
 
 @media (min-width: 900px) {
