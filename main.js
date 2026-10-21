@@ -37,7 +37,7 @@ const DEATH_WAIT = kidMode ? 20 : 14;
 const themes = ['day', 'night', 'storm', 'fox'];
 const patterns = ['steady', 'fast', 'mixed', 'chaotic'];
 const upgrades = { feederSpeed: 1, fence: 0, calmness: 0, golden: 0 };
-const levels = Array.from({ length: 100 }, (_, index) => {
+const days = Array.from({ length: 318 }, (_, index) => {
   const number = index + 1;
   const theme = themes[Math.floor(index / 5) % themes.length];
   const pattern = index < 10 ? 'steady' : index < 25 ? 'fast' : index < 49 ? 'mixed' : 'chaotic';
@@ -47,7 +47,7 @@ let levelIndex = 0, running = false, paused = false, lastFrame = 0, accumulator 
 let simTime = 0, levelStartTime = 0, nextArrival = 0, nextEvent = 0, lastActivitySpawn = -Infinity, chickens = [], queue = [], servers = [];
 let served = 0, died = 0, levelServed = 0, levelDied = 0, moneySpent = 0, score = 0, streak = 0, currentEvent = null, outcome = null, levelUpUntil = 0, levelStartUntil = 0;
 
-function level() { return levels[levelIndex]; }
+function day() { return days[levelIndex]; }
 function serverCount() { return Number(ui.servers.value); }
 function exponential(rate) { return -Math.log(1 - Math.random()) / Math.max(.05, rate); }
 function arrivalDelay() {
@@ -58,11 +58,11 @@ function arrivalDelay() {
 function refreshControls() { ui.serversValue.textContent = serverCount(); ui.linePreview.textContent = '🐔 '.repeat(serverCount()).trim(); }
 function setStatus(text, kind = 'neutral') { ui.status.textContent = text; ui.status.className = `status-box ${kind}`; }
 function arrivalRate() {
-  const l = level();
+  const l = day();
   const isWavy = l.pattern !== 'steady' && l.pattern !== 'fast';
   const wave = isWavy ? 1 + Math.max(0, Math.sin(simTime / (l.pattern === 'chaotic' ? 5 : 9))) * (l.pattern === 'chaotic' ? .8 : .7) : 1;
   const sleepy = l.theme === 'night' ? .8 : 1; const foxRush = currentEvent && currentEvent.type === 'fox' ? 2 : 1;
-  // Early levels get the largest lift so a new player sees a lively farm quickly.
+  // Early days get the largest lift so a new player sees a lively farm quickly.
   const activityBoost = levelIndex < 10 ? 1.4 - levelIndex * .01 : 1.3;
   return l.arrival * activityBoost * (kidMode ? .8 : 1) * sleepy * foxRush * (1 + serverCount() * .05) * wave;
 }
@@ -70,7 +70,7 @@ function feedingRate() { const rainSlow = currentEvent && currentEvent.type === 
 function themeLabel(theme) { return ({ day: '☀️ Day', night: '🌙 Night', storm: '⛈️ Storm', fox: '🐾 Fox country' })[theme] || '☀️ Day'; }
 function updateUpgrades() {
   const items = []; if (upgrades.feederSpeed > 1) items.push(`⚡ Fast feeder +${Math.round((upgrades.feederSpeed - 1) * 100)}%`); if (upgrades.fence) items.push(`🛡️ Strong fence Lv.${upgrades.fence}`); if (upgrades.calmness) items.push(`💛 Calm chickens Lv.${upgrades.calmness}`); if (upgrades.golden) items.push('✨ Golden feeder');
-  ui.upgradeList.innerHTML = items.length ? items.map(item => `<span>${item}</span>`).join('') : '<span>🔒 Keep playing to unlock helpers!</span>'; ui.upgradeHint.textContent = `Next helper at level ${Math.min(100, (Math.floor((levelIndex + 1) / 5) + 1) * 5)}.`;
+  ui.upgradeList.innerHTML = items.length ? items.map(item => `<span>${item}</span>`).join('') : '<span>🔒 Keep playing to unlock helpers!</span>'; ui.upgradeHint.textContent = `Next helper at day ${Math.min(318, (Math.floor((levelIndex + 1) / 5) + 1) * 5)}.`;
 }
 function unlockUpgrade() {
   if ((levelIndex + 1) % 5 !== 0) return;
@@ -79,12 +79,12 @@ function unlockUpgrade() {
   updateUpgrades();
 }
 function updateLevelPanel() {
-  const l = level(); ui.levelBadge.textContent = `LEVEL ${levelIndex + 1}`; ui.levelNumber.textContent = levelIndex + 1; ui.goal.textContent = `Serve ${l.target} chickens`; ui.deathLimit.textContent = l.maxDeaths; ui.budgetLeft.textContent = `$${Math.max(0, l.budget - moneySpent).toFixed(0)}`; ui.timeLeft.textContent = `${Math.max(0, l.time - (simTime - levelStartTime)).toFixed(0)} s`; ui.theme.textContent = themeLabel(l.theme);
+  const l = day(); ui.levelBadge.textContent = `DAY ${levelIndex + 1}`; ui.levelNumber.textContent = levelIndex + 1; ui.goal.textContent = `Serve ${l.target} chickens`; ui.deathLimit.textContent = l.maxDeaths; ui.budgetLeft.textContent = `$${Math.max(0, l.budget - moneySpent).toFixed(0)}`; ui.timeLeft.textContent = `${Math.max(0, l.time - (simTime - levelStartTime)).toFixed(0)} s`; ui.theme.textContent = themeLabel(l.theme);
 }
 function resetLevel() {
   stopRainSound();
   running = false; paused = false; outcome = null; simTime = 0; levelStartTime = 0; accumulator = 0; nextArrival = 0; nextEvent = 12; lastActivitySpawn = -Infinity; chickens = []; queue = []; servers = Array.from({ length: serverCount() }, (_, i) => createServer(i)); served = 0; died = 0; levelServed = 0; levelDied = 0; moneySpent = 0; currentEvent = null; score = 0; streak = 0; levelUpUntil = 0; levelStartUntil = 0;
-  ui.start.disabled = false; ui.start.textContent = 'Start Level'; ui.pause.disabled = true; ui.pause.textContent = 'Pause'; setStatus('Pick some feeding lines, then press Start Level.'); updateStats(); draw();
+  ui.start.disabled = false; ui.start.textContent = 'Start Day'; ui.pause.disabled = true; ui.pause.textContent = 'Pause'; setStatus('Pick some feeding lines, then press Start Day.'); updateStats(); draw();
 }
 function startLevel() {
   resetLevel(); running = true; levelStartTime = simTime; levelStartUntil = simTime + 2;
@@ -100,7 +100,7 @@ function syncServers() {
   while (servers.length < serverCount()) servers.push(createServer(servers.length));
 }
 function makeChicken(silent = false) {
-  const roll = Math.random(); const l = level(); const eggChance = Math.min(.55, l.eggChance + (serverCount() > 10 ? .15 : 0)); const roosterChance = Math.min(.30, l.roosterChance + (serverCount() > 8 ? .05 : 0)); const chargeDuration = l.theme === 'night' ? .75 : serverCount() > 8 ? .25 : .5; const type = roll < roosterChance ? 'rooster' : roll < roosterChance + eggChance ? 'egg' : 'normal';
+  const roll = Math.random(); const l = day(); const eggChance = Math.min(.55, l.eggChance + (serverCount() > 10 ? .15 : 0)); const roosterChance = Math.min(.30, l.roosterChance + (serverCount() > 8 ? .05 : 0)); const chargeDuration = l.theme === 'night' ? .75 : serverCount() > 8 ? .25 : .5; const type = roll < roosterChance ? 'rooster' : roll < roosterChance + eggChance ? 'egg' : 'normal';
   const chicken = { type, arrival: simTime, start: null, service: 0, x: 24, y: 0, wobble: Math.random() * 6.28, idlePhase: Math.random() * 6.28, state: type === 'rooster' ? 'charging' : 'queue', server: -1, chargeDuration, chargeUntil: type === 'rooster' ? simTime + chargeDuration : 0, deadAt: 0, deadX: 0, deadY: 0, fedAt: 0, fedX: 0, fedY: 0, bounceUntil: type === 'rooster' ? simTime + chargeDuration : 0 };
   chickens.push(chicken); if (!silent) playSound(type === 'rooster' ? sounds.rooster : sounds.arrive); if (type !== 'rooster') { queue.push(chicken); assignServers(); }
 }
@@ -123,14 +123,14 @@ function finishLine(line) { if (!line || !line.chicken) return; const chicken = 
 function keepFarmActive() {
   const visible = queue.length + servers.filter(line => line.index < serverCount() && line.chicken !== null).length + chickens.filter(chicken => chicken.state === 'charging').length;
   const targetVisible = Math.min(8, Math.max(4, serverCount() + 2));
-  if (queue.length < 2 && visible < targetVisible && simTime - lastActivitySpawn >= 3.5 && levelServed < level().target) {
+  if (queue.length < 2 && visible < targetVisible && simTime - lastActivitySpawn >= 3.5 && levelServed < day().target) {
     makeChicken(true); lastActivitySpawn = simTime;
   }
 }
 function triggerEvent() {
   if (kidMode) return;
   const roll = Math.random();
-  const foxAllowed = level().theme === 'fox' || level().theme === 'night'; const foxChance = foxAllowed ? Math.min(.32, .12 + levelIndex * .003) : 0;
+  const foxAllowed = day().theme === 'fox' || day().theme === 'night'; const foxChance = foxAllowed ? Math.min(.32, .12 + levelIndex * .003) : 0;
   if (foxAllowed && roll < foxChance) { currentEvent = { type: 'fox', end: simTime + 3, foxX: -80 }; if (Math.random() > upgrades.fence * .25) queue.sort(() => Math.random() - .5); playSound(sounds.rustle); }
   else if (roll < foxChance + .34) { const active = servers.filter(line => line.index < serverCount()); const line = active.length ? active[Math.floor(Math.random() * active.length)] : null; currentEvent = { type: 'breakdown', end: simTime + 5, line: line ? line.index : Math.floor(Math.random() * Math.max(1, serverCount())) }; if (line) line.brokenUntil = currentEvent.end; moneySpent += 10; playSound(sounds.breakdown); }
   else if (roll < foxChance + .67) { currentEvent = { type: 'rain', end: simTime + 8 }; startRainSound(); }
@@ -141,7 +141,7 @@ function eventName() { if (!currentEvent) return 'Quiet farm day'; if (currentEv
 function stepSimulation(dt) {
   simTime += dt;
   while (simTime >= nextArrival) { makeChicken(); nextArrival = simTime + arrivalDelay(); }
-  const eventChance = level().events + serverCount() * .02;
+  const eventChance = day().events + serverCount() * .02;
   if (!currentEvent && !kidMode && simTime >= nextEvent && Math.random() < eventChance) triggerEvent();
   if (currentEvent && simTime >= currentEvent.end) { if (currentEvent.type === 'rain') stopRainSound(); currentEvent = null; }
   if (currentEvent && currentEvent.type === 'rush' && Math.random() < dt * 1.5) makeChicken();
@@ -150,18 +150,18 @@ function stepSimulation(dt) {
   assignServers(); checkWaitingChickens(); keepFarmActive();
   for (const line of servers) { const broken = line.brokenUntil > simTime; if (line.chicken && !broken && simTime - line.start >= line.duration) finishLine(line); }
   moneySpent += (serverCount() ** 1.4) * dt; score = Math.round(served * 10 * (1 + upgrades.golden * .1) - moneySpent - died * 20);
-  if (moneySpent >= level().budget) endLevel(`Your $${level().budget} budget ran out. Try opening fewer lines.`);
-  else if (levelDied > level().maxDeaths) endLevel(`Too many chickens got too tired. You had ${levelDied} deaths this level.`);
-  else if (levelServed >= level().target) levelUp();
-  else if (simTime - levelStartTime >= level().time) endLevel(`Time is up! You fed ${levelServed} of ${level().target}.`);
+  if (moneySpent >= day().budget) endLevel(`Your $${day().budget} budget ran out. Try opening fewer lines.`);
+  else if (levelDied > day().maxDeaths) endLevel(`Too many chickens got too tired. You had ${levelDied} deaths this day.`);
+  else if (levelServed >= day().target) levelUp();
+  else if (simTime - levelStartTime >= day().time) endLevel(`Time is up! You fed ${levelServed} of ${day().target}.`);
 }
 function endLevel(message) { running = false; outcome = 'failure'; ui.pause.disabled = true; ui.start.disabled = false; ui.start.textContent = 'Try Again'; setStatus(`Try Again! ${message}`, 'failure'); }
 function levelUp() {
-  if (levelIndex < levels.length - 1) levelIndex++; else levels[levelIndex].target += 10;
+  if (levelIndex < days.length - 1) levelIndex++; else days[levelIndex].target += 10;
   levelServed = 0; levelDied = 0; moneySpent = 0; queue = []; chickens = []; servers = Array.from({ length: serverCount() }, (_, i) => createServer(i)); levelStartTime = simTime; currentEvent = null; nextArrival = simTime + arrivalDelay(); nextEvent = simTime + 12; lastActivitySpawn = -Infinity; levelUpUntil = simTime + 5; outcome = 'success';
-  stopRainSound(); unlockUpgrade(); playSound(sounds.levelUp); setStatus(`⭐ Level Up! Welcome to Level ${levelIndex + 1}! Keep feeding!`, 'success');
+  stopRainSound(); unlockUpgrade(); playSound(sounds.levelUp); setStatus(`⭐ New day! Welcome to Day ${levelIndex + 1}! Keep feeding!`, 'success');
 }
-function updateStats() { ui.served.textContent = served; ui.died.textContent = died; ui.money.textContent = `$${Math.floor(moneySpent)}`; ui.budgetHud.textContent = `$${Math.max(0, level().budget - moneySpent).toFixed(0)}`; ui.toLevelUp.textContent = Math.max(0, level().target - levelServed); ui.score.textContent = score; ui.clock.textContent = `Farm clock: ${simTime.toFixed(1)} s`; ui.streak.textContent = `Streak: ${streak} 🔥`; ui.event.textContent = levelUpUntil > simTime ? `⭐ LEVEL UP! Level ${levelIndex + 1}` : running ? eventName() : outcome === 'failure' ? 'Farm day over' : 'Ready for chickens'; updateLevelPanel(); }
+function updateStats() { ui.served.textContent = served; ui.died.textContent = died; ui.money.textContent = `$${Math.floor(moneySpent)}`; ui.budgetHud.textContent = `$${Math.max(0, day().budget - moneySpent).toFixed(0)}`; ui.toLevelUp.textContent = Math.max(0, day().target - levelServed); ui.score.textContent = score; ui.clock.textContent = `Farm clock: ${simTime.toFixed(1)} s`; ui.streak.textContent = `Streak: ${streak} 🔥`; ui.event.textContent = levelUpUntil > simTime ? `⭐ NEW DAY! Day ${levelIndex + 1}` : running ? eventName() : outcome === 'failure' ? 'Farm day over' : 'Ready for chickens'; updateLevelPanel(); }
 function drawChicken(chicken, x, y) {
   const bob = Math.sin(simTime * 5 + chicken.wobble) * 2.8 + Math.sin(simTime * 2.1 + chicken.idlePhase) * .9;
   const bounceAge = chicken.bounceUntil - simTime;
@@ -192,7 +192,7 @@ function drawDecorations() {
   if (levelStartUntil > simTime || levelUpUntil > simTime) { for (let i = 0; i < 18; i++) { const x = 300 + ((i * 53) % 360), y = 82 + ((i * 29) % 85); ctx.fillStyle = ['#ef4c42', '#ffd44d', '#76cbed', '#8fd06f'][i % 4]; ctx.save(); ctx.globalAlpha = levelStartUntil > simTime ? Math.min(1, (levelStartUntil - simTime) / 2) : 1; ctx.translate(x, y); ctx.rotate(simTime * 2 + i); ctx.fillRect(-4, -4, 8, 8); ctx.restore(); } }
 }
 function draw() {
-  const w = canvas.width, h = canvas.height; const farmTheme = level().theme; ctx.clearRect(0, 0, w, h); const sky = ctx.createLinearGradient(0, 0, 0, h); if (farmTheme === 'night') { sky.addColorStop(0, '#172a52'); sky.addColorStop(1, '#526e9a'); } else if (farmTheme === 'storm') { sky.addColorStop(0, '#7893ab'); sky.addColorStop(1, '#c2d0d4'); } else if (farmTheme === 'fox') { sky.addColorStop(0, '#f5ad72'); sky.addColorStop(1, '#ffdca2'); } else { sky.addColorStop(0, '#68c7ee'); sky.addColorStop(1, '#bcebf8'); } ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h); if (farmTheme === 'night') { ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(75, 65, 28, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#172a52'; ctx.beginPath(); ctx.arc(88, 57, 25, 0, Math.PI * 2); ctx.fill(); for (let i = 0; i < 16; i++) { ctx.fillStyle = 'rgba(255, 240, 150, .8)'; ctx.beginPath(); ctx.arc((i * 71) % w, 40 + (i * 23) % 150, 2, 0, Math.PI * 2); ctx.fill(); } } else { ctx.fillStyle = '#ffe176'; ctx.beginPath(); ctx.arc(75, 65, 35, 0, Math.PI * 2); ctx.fill(); } drawCloud(200 + (simTime * 4 % 100), 56, .8); drawCloud(650 - (simTime * 2 % 80), 45, .65);
+  const w = canvas.width, h = canvas.height; const farmTheme = day().theme; ctx.clearRect(0, 0, w, h); const sky = ctx.createLinearGradient(0, 0, 0, h); if (farmTheme === 'night') { sky.addColorStop(0, '#172a52'); sky.addColorStop(1, '#526e9a'); } else if (farmTheme === 'storm') { sky.addColorStop(0, '#7893ab'); sky.addColorStop(1, '#c2d0d4'); } else if (farmTheme === 'fox') { sky.addColorStop(0, '#f5ad72'); sky.addColorStop(1, '#ffdca2'); } else { sky.addColorStop(0, '#68c7ee'); sky.addColorStop(1, '#bcebf8'); } ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h); if (farmTheme === 'night') { ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(75, 65, 28, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#172a52'; ctx.beginPath(); ctx.arc(88, 57, 25, 0, Math.PI * 2); ctx.fill(); for (let i = 0; i < 16; i++) { ctx.fillStyle = 'rgba(255, 240, 150, .8)'; ctx.beginPath(); ctx.arc((i * 71) % w, 40 + (i * 23) % 150, 2, 0, Math.PI * 2); ctx.fill(); } } else { ctx.fillStyle = '#ffe176'; ctx.beginPath(); ctx.arc(75, 65, 35, 0, Math.PI * 2); ctx.fill(); } drawCloud(200 + (simTime * 4 % 100), 56, .8); drawCloud(650 - (simTime * 2 % 80), 45, .65);
   ctx.fillStyle = '#a8dc7b'; ctx.fillRect(0, 290, w, h - 290); ctx.fillStyle = '#8fc76a'; ctx.fillRect(0, 395, w, h - 395);
   ctx.fillStyle = '#f7d99d'; ctx.fillRect(14, 220, 120, 110); ctx.fillStyle = '#e35b4b'; ctx.beginPath(); ctx.moveTo(0, 220); ctx.lineTo(74, 164); ctx.lineTo(148, 220); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#8d5b42'; ctx.fillRect(58, 263, 34, 67); ctx.fillStyle = '#aedfec'; ctx.fillRect(27, 246, 25, 25); ctx.fillRect(99, 246, 25, 25); ctx.fillStyle = '#fff5ce'; ctx.font = 'bold 17px Trebuchet MS'; ctx.fillText('FARM', 43, 211);
   ctx.strokeStyle = '#fff4cf'; ctx.lineWidth = 5; for (let x = 155; x < w; x += 42) { ctx.beginPath(); ctx.moveTo(x, 355); ctx.lineTo(x, 393); ctx.stroke(); } ctx.beginPath(); ctx.moveTo(145, 372); ctx.lineTo(w, 372); ctx.stroke(); drawDecorations();
