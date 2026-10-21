@@ -33,7 +33,7 @@ const ui = {
 };
 
 const kidMode = false;
-const DEATH_WAIT = kidMode ? 15 : 10;
+const DEATH_WAIT = kidMode ? 20 : 14;
 const themes = ['day', 'night', 'storm', 'fox'];
 const patterns = ['steady', 'fast', 'mixed', 'chaotic'];
 const upgrades = { feederSpeed: 1, fence: 0, calmness: 0, golden: 0 };
@@ -44,12 +44,17 @@ const levels = Array.from({ length: 100 }, (_, index) => {
   return { target: 15 + index * 3, maxDeaths: 2 + Math.floor(index / 8), budget: 90 + index * 18, time: 60 + Math.min(90, Math.floor(index / 5) * 4), arrival: .85 + Math.min(1.35, index * .018), events: .08 + Math.min(.28, index * .003), pattern, theme, eggChance: .20 + Math.min(.12, Math.floor(index / 10) * .02), roosterChance: .10 + Math.min(.10, Math.floor(index / 10) * .02) };
 });
 let levelIndex = 0, running = false, paused = false, lastFrame = 0, accumulator = 0;
-let simTime = 0, levelStartTime = 0, nextArrival = 0, nextEvent = 0, chickens = [], queue = [], servers = [];
+let simTime = 0, levelStartTime = 0, nextArrival = 0, nextEvent = 0, lastActivitySpawn = -Infinity, chickens = [], queue = [], servers = [];
 let served = 0, died = 0, levelServed = 0, levelDied = 0, moneySpent = 0, score = 0, streak = 0, currentEvent = null, outcome = null, levelUpUntil = 0, levelStartUntil = 0;
 
 function level() { return levels[levelIndex]; }
 function serverCount() { return Number(ui.servers.value); }
 function exponential(rate) { return -Math.log(1 - Math.random()) / Math.max(.05, rate); }
+function arrivalDelay() {
+  // Keep the natural variation, but prevent a long empty stretch between chickens.
+  const naturalGap = .28 + exponential(arrivalRate() * 1.08) * .68;
+  return Math.min(2.4, naturalGap);
+}
 function refreshControls() { ui.serversValue.textContent = serverCount(); ui.linePreview.textContent = '🐔 '.repeat(serverCount()).trim(); }
 function setStatus(text, kind = 'neutral') { ui.status.textContent = text; ui.status.className = `status-box ${kind}`; }
 function arrivalRate() {
@@ -57,9 +62,11 @@ function arrivalRate() {
   const isWavy = l.pattern !== 'steady' && l.pattern !== 'fast';
   const wave = isWavy ? 1 + Math.max(0, Math.sin(simTime / (l.pattern === 'chaotic' ? 5 : 9))) * (l.pattern === 'chaotic' ? .8 : .7) : 1;
   const sleepy = l.theme === 'night' ? .8 : 1; const foxRush = currentEvent && currentEvent.type === 'fox' ? 2 : 1;
-  return l.arrival * (kidMode ? .8 : 1) * sleepy * foxRush * (1 + serverCount() * .05) * wave;
+  // Early levels get the largest lift so a new player sees a lively farm quickly.
+  const activityBoost = levelIndex < 10 ? 1.4 - levelIndex * .01 : 1.3;
+  return l.arrival * activityBoost * (kidMode ? .8 : 1) * sleepy * foxRush * (1 + serverCount() * .05) * wave;
 }
-function feedingRate() { const rainSlow = currentEvent && currentEvent.type === 'rain' ? .52 : 1; const foxSlow = currentEvent && currentEvent.type === 'fox' ? .80 : 1; return .78 * upgrades.feederSpeed * rainSlow * foxSlow; }
+function feedingRate() { const rainSlow = currentEvent && currentEvent.type === 'rain' ? .52 : 1; const foxSlow = currentEvent && currentEvent.type === 'fox' ? .80 : 1; return .46 * upgrades.feederSpeed * rainSlow * foxSlow; }
 function themeLabel(theme) { return ({ day: '☀️ Day', night: '🌙 Night', storm: '⛈️ Storm', fox: '🐾 Fox country' })[theme] || '☀️ Day'; }
 function updateUpgrades() {
   const items = []; if (upgrades.feederSpeed > 1) items.push(`⚡ Fast feeder +${Math.round((upgrades.feederSpeed - 1) * 100)}%`); if (upgrades.fence) items.push(`🛡️ Strong fence Lv.${upgrades.fence}`); if (upgrades.calmness) items.push(`💛 Calm chickens Lv.${upgrades.calmness}`); if (upgrades.golden) items.push('✨ Golden feeder');
@@ -76,20 +83,26 @@ function updateLevelPanel() {
 }
 function resetLevel() {
   stopRainSound();
-  running = false; paused = false; outcome = null; simTime = 0; levelStartTime = 0; accumulator = 0; nextArrival = 0; nextEvent = 12; chickens = []; queue = []; servers = Array.from({ length: serverCount() }, (_, i) => createServer(i)); served = 0; died = 0; levelServed = 0; levelDied = 0; moneySpent = 0; currentEvent = null; score = 0; streak = 0; levelUpUntil = 0; levelStartUntil = 0;
+  running = false; paused = false; outcome = null; simTime = 0; levelStartTime = 0; accumulator = 0; nextArrival = 0; nextEvent = 12; lastActivitySpawn = -Infinity; chickens = []; queue = []; servers = Array.from({ length: serverCount() }, (_, i) => createServer(i)); served = 0; died = 0; levelServed = 0; levelDied = 0; moneySpent = 0; currentEvent = null; score = 0; streak = 0; levelUpUntil = 0; levelStartUntil = 0;
   ui.start.disabled = false; ui.start.textContent = 'Start Level'; ui.pause.disabled = true; ui.pause.textContent = 'Pause'; setStatus('Pick some feeding lines, then press Start Level.'); updateStats(); draw();
 }
 function startLevel() {
-  resetLevel(); running = true; levelStartTime = simTime; levelStartUntil = simTime + 2; makeChicken(); nextArrival = simTime + exponential(arrivalRate()); ui.start.disabled = true; ui.pause.disabled = false; setStatus('The chickens are coming! Watch the line.', 'running');
+  resetLevel(); running = true; levelStartTime = simTime; levelStartUntil = simTime + 2;
+  // A small opening flock makes the farm feel alive immediately without a giant queue.
+  const openingFlock = Math.min(8, Math.max(4, serverCount() + 2));
+  makeChicken();
+  for (let i = 1; i < openingFlock; i++) makeChicken(true);
+  nextArrival = simTime + arrivalDelay();
+  ui.start.disabled = true; ui.pause.disabled = false; setStatus('The chickens are coming! Watch the line.', 'running');
 }
 function createServer(index) { return { chicken: null, start: 0, duration: 0, brokenUntil: 0, index }; }
 function syncServers() {
   while (servers.length < serverCount()) servers.push(createServer(servers.length));
 }
-function makeChicken() {
+function makeChicken(silent = false) {
   const roll = Math.random(); const l = level(); const eggChance = Math.min(.55, l.eggChance + (serverCount() > 10 ? .15 : 0)); const roosterChance = Math.min(.30, l.roosterChance + (serverCount() > 8 ? .05 : 0)); const chargeDuration = l.theme === 'night' ? .75 : serverCount() > 8 ? .25 : .5; const type = roll < roosterChance ? 'rooster' : roll < roosterChance + eggChance ? 'egg' : 'normal';
-  const chicken = { type, arrival: simTime, start: null, service: 0, x: 24, y: 0, wobble: Math.random() * 6.28, state: type === 'rooster' ? 'charging' : 'queue', server: -1, chargeDuration, chargeUntil: type === 'rooster' ? simTime + chargeDuration : 0, deadAt: 0, deadX: 0, deadY: 0, fedAt: 0, fedX: 0, fedY: 0, bounceUntil: type === 'rooster' ? simTime + chargeDuration : 0 };
-  chickens.push(chicken); playSound(type === 'rooster' ? sounds.rooster : sounds.arrive); if (type !== 'rooster') { queue.push(chicken); assignServers(); }
+  const chicken = { type, arrival: simTime, start: null, service: 0, x: 24, y: 0, wobble: Math.random() * 6.28, idlePhase: Math.random() * 6.28, state: type === 'rooster' ? 'charging' : 'queue', server: -1, chargeDuration, chargeUntil: type === 'rooster' ? simTime + chargeDuration : 0, deadAt: 0, deadX: 0, deadY: 0, fedAt: 0, fedX: 0, fedY: 0, bounceUntil: type === 'rooster' ? simTime + chargeDuration : 0 };
+  chickens.push(chicken); if (!silent) playSound(type === 'rooster' ? sounds.rooster : sounds.arrive); if (type !== 'rooster') { queue.push(chicken); assignServers(); }
 }
 function assignServers() {
   syncServers();
@@ -101,12 +114,19 @@ function assignServers() {
     server.chicken = chicken; server.start = simTime; server.duration = exponential(feedingRate()) * multiplier; if (chicken.type === 'egg') playSound(sounds.egg);
   }
 }
-function markDeath(chicken) { const index = queue.indexOf(chicken); chicken.deadX = 160 - Math.max(0, index) * 18; chicken.deadY = 430 + Math.sin(Math.max(0, index) / 2) * 12; chicken.deadAt = simTime; chicken.state = 'dead'; died++; levelDied++; streak = 0; playSound(sounds.death); }
+function markDeath(chicken, queueIndex = queue.indexOf(chicken)) { const index = Math.max(0, queueIndex); chicken.deadX = 160 - index * 18; chicken.deadY = 430 + Math.sin(index / 2) * 12; chicken.deadAt = simTime; chicken.state = 'dead'; died++; levelDied++; streak = 0; playSound(sounds.death); }
 function checkWaitingChickens() {
   const patience = DEATH_WAIT * (1 + upgrades.calmness * .2);
-  for (let i = queue.length - 1; i >= 0; i--) { const chicken = queue[i]; if (simTime - chicken.arrival > patience) { queue.splice(i, 1); markDeath(chicken); } }
+  for (let i = queue.length - 1; i >= 0; i--) { const chicken = queue[i]; if (simTime - chicken.arrival > patience) { markDeath(chicken, i); queue.splice(i, 1); } }
 }
 function finishLine(line) { if (!line || !line.chicken) return; const chicken = line.chicken; chicken.state = 'leaving'; chicken.fedAt = simTime; chicken.fedX = 220 + line.index * 112 + 46; chicken.fedY = 190; chicken.bounceUntil = simTime + .35; served++; levelServed++; streak++; playSound(sounds.feed); line.chicken = null; line.start = 0; line.duration = 0; assignServers(); }
+function keepFarmActive() {
+  const visible = queue.length + servers.filter(line => line.index < serverCount() && line.chicken !== null).length + chickens.filter(chicken => chicken.state === 'charging').length;
+  const targetVisible = Math.min(8, Math.max(4, serverCount() + 2));
+  if (queue.length < 2 && visible < targetVisible && simTime - lastActivitySpawn >= 3.5 && levelServed < level().target) {
+    makeChicken(true); lastActivitySpawn = simTime;
+  }
+}
 function triggerEvent() {
   if (kidMode) return;
   const roll = Math.random();
@@ -120,14 +140,14 @@ function triggerEvent() {
 function eventName() { if (!currentEvent) return 'Quiet farm day'; if (currentEvent.type === 'fox') return '🐾 Cute fox! Chickens are wiggling!'; if (currentEvent.type === 'breakdown') return `🔧 Feeder broken on line ${currentEvent.line + 1}!`; if (currentEvent.type === 'rain') return '🌧️ Rainstorm! Feeding is slower!'; return '💨 Chicken rush!'; }
 function stepSimulation(dt) {
   simTime += dt;
-  while (simTime >= nextArrival) { makeChicken(); nextArrival = simTime + exponential(arrivalRate()); }
+  while (simTime >= nextArrival) { makeChicken(); nextArrival = simTime + arrivalDelay(); }
   const eventChance = level().events + serverCount() * .02;
   if (!currentEvent && !kidMode && simTime >= nextEvent && Math.random() < eventChance) triggerEvent();
   if (currentEvent && simTime >= currentEvent.end) { if (currentEvent.type === 'rain') stopRainSound(); currentEvent = null; }
   if (currentEvent && currentEvent.type === 'rush' && Math.random() < dt * 1.5) makeChicken();
   if (currentEvent && currentEvent.type === 'fox') currentEvent.foxX += dt * 260;
   for (const chicken of chickens) if (chicken.state === 'charging' && simTime >= chicken.chargeUntil) { chicken.state = 'queue'; queue.unshift(chicken); assignServers(); }
-  assignServers(); checkWaitingChickens();
+  assignServers(); checkWaitingChickens(); keepFarmActive();
   for (const line of servers) { const broken = line.brokenUntil > simTime; if (line.chicken && !broken && simTime - line.start >= line.duration) finishLine(line); }
   moneySpent += (serverCount() ** 1.4) * dt; score = Math.round(served * 10 * (1 + upgrades.golden * .1) - moneySpent - died * 20);
   if (moneySpent >= level().budget) endLevel(`Your $${level().budget} budget ran out. Try opening fewer lines.`);
@@ -138,12 +158,12 @@ function stepSimulation(dt) {
 function endLevel(message) { running = false; outcome = 'failure'; ui.pause.disabled = true; ui.start.disabled = false; ui.start.textContent = 'Try Again'; setStatus(`Try Again! ${message}`, 'failure'); }
 function levelUp() {
   if (levelIndex < levels.length - 1) levelIndex++; else levels[levelIndex].target += 10;
-  levelServed = 0; levelDied = 0; moneySpent = 0; queue = []; chickens = []; servers = Array.from({ length: serverCount() }, (_, i) => createServer(i)); levelStartTime = simTime; nextEvent = simTime + 12; currentEvent = null; levelUpUntil = simTime + 5; outcome = 'success';
+  levelServed = 0; levelDied = 0; moneySpent = 0; queue = []; chickens = []; servers = Array.from({ length: serverCount() }, (_, i) => createServer(i)); levelStartTime = simTime; currentEvent = null; nextArrival = simTime + arrivalDelay(); nextEvent = simTime + 12; lastActivitySpawn = -Infinity; levelUpUntil = simTime + 5; outcome = 'success';
   stopRainSound(); unlockUpgrade(); playSound(sounds.levelUp); setStatus(`⭐ Level Up! Welcome to Level ${levelIndex + 1}! Keep feeding!`, 'success');
 }
 function updateStats() { ui.served.textContent = served; ui.died.textContent = died; ui.money.textContent = `$${Math.floor(moneySpent)}`; ui.budgetHud.textContent = `$${Math.max(0, level().budget - moneySpent).toFixed(0)}`; ui.toLevelUp.textContent = Math.max(0, level().target - levelServed); ui.score.textContent = score; ui.clock.textContent = `Farm clock: ${simTime.toFixed(1)} s`; ui.streak.textContent = `Streak: ${streak} 🔥`; ui.event.textContent = levelUpUntil > simTime ? `⭐ LEVEL UP! Level ${levelIndex + 1}` : running ? eventName() : outcome === 'failure' ? 'Farm day over' : 'Ready for chickens'; updateLevelPanel(); }
 function drawChicken(chicken, x, y) {
-  const bob = Math.sin(simTime * 5 + chicken.wobble) * 2;
+  const bob = Math.sin(simTime * 5 + chicken.wobble) * 2.8 + Math.sin(simTime * 2.1 + chicken.idlePhase) * .9;
   const bounceAge = chicken.bounceUntil - simTime;
   const bounceDuration = chicken.state === 'charging' ? chicken.chargeDuration : .35;
   const bounce = bounceAge > 0 ? Math.sin(Math.max(0, 1 - bounceAge / bounceDuration) * Math.PI) * 8 : 0;
@@ -178,10 +198,10 @@ function draw() {
   ctx.strokeStyle = '#fff4cf'; ctx.lineWidth = 5; for (let x = 155; x < w; x += 42) { ctx.beginPath(); ctx.moveTo(x, 355); ctx.lineTo(x, 393); ctx.stroke(); } ctx.beginPath(); ctx.moveTo(145, 372); ctx.lineTo(w, 372); ctx.stroke(); drawDecorations();
   ctx.fillStyle = '#f1cf85'; ctx.fillRect(185, 95, 690, 190); const count = serverCount(); for (let i = 0; i < count; i++) { const x = 205 + i * 112; const busyLine = servers.some(line => line.index === i && line.chicken !== null); ctx.fillStyle = '#f5e0a6'; ctx.fillRect(x, 105, 92, 160); ctx.strokeStyle = busyLine ? '#ffd84f' : '#c59651'; ctx.lineWidth = busyLine ? 5 : 3; ctx.shadowColor = busyLine ? 'rgba(255, 216, 79, .65)' : 'transparent'; ctx.shadowBlur = busyLine ? 14 : 0; ctx.strokeRect(x, 105, 92, 160); ctx.shadowBlur = 0; ctx.fillStyle = '#38714d'; ctx.font = 'bold 12px Trebuchet MS'; ctx.fillText(`LINE ${i + 1}`, x + 24, 124); ctx.fillStyle = '#c39b54'; ctx.fillRect(x + 15, 150, 62, 8); ctx.fillRect(x + 15, 234, 62, 8); if (currentEvent && currentEvent.type === 'breakdown' && currentEvent.line === i) { ctx.fillStyle = '#e54f45'; ctx.font = 'bold 25px sans-serif'; ctx.fillText('🔧', x + 33, 205); } }
   for (const chicken of chickens) {
-    if (chicken.state === 'dead') { const age = simTime - chicken.deadAt; if (age < 1) { ctx.save(); ctx.globalAlpha = 1 - age; ctx.font = '22px sans-serif'; ctx.fillText('😢', chicken.deadX, chicken.deadY); ctx.restore(); } continue; }
-    if (chicken.state === 'leaving') { const age = simTime - chicken.fedAt; if (age < .7) { ctx.save(); ctx.globalAlpha = 1 - age / .7; ctx.font = '20px sans-serif'; ctx.fillStyle = '#fff4a8'; ctx.fillText('✨', chicken.fedX, chicken.fedY - 22 - age * 18); ctx.restore(); } continue; }
+    if (chicken.state === 'dead') { const age = simTime - chicken.deadAt; if (age < 1.4) { ctx.save(); ctx.globalAlpha = 1 - age / 1.4; ctx.font = '22px sans-serif'; ctx.fillText('😢', chicken.deadX, chicken.deadY); ctx.restore(); } continue; }
+    if (chicken.state === 'leaving') { const age = simTime - chicken.fedAt; if (age < 1.15) { ctx.save(); ctx.globalAlpha = Math.max(.08, 1 - age / 1.15); drawChicken(chicken, chicken.fedX, chicken.fedY - age * 8); ctx.font = '20px sans-serif'; ctx.fillStyle = '#fff4a8'; ctx.fillText('✨', chicken.fedX, chicken.fedY - 22 - age * 18); ctx.restore(); } continue; }
     let x, y;
-    if (chicken.state === 'queue') { const index = queue.indexOf(chicken); const queueWiggleSpeed = serverCount() > 6 ? .7 : 1.4; x = 160 - index * 18; y = 430 + Math.sin(index / 2) * 12 + Math.sin(simTime * queueWiggleSpeed + index) * 2; }
+    if (chicken.state === 'queue') { const index = queue.indexOf(chicken); const queueWiggleSpeed = serverCount() > 6 ? .7 : 1.4; x = 160 - index * 18; y = 430 + Math.sin(index / 2) * 12 + Math.sin(simTime * queueWiggleSpeed + chicken.idlePhase) * 3.5; }
     else if (chicken.state === 'charging') { const progress = Math.min(1, (simTime - chicken.arrival) / chicken.chargeDuration); x = 35 + progress * 100; y = 430 + Math.sin(progress * Math.PI) * -22; }
     else { x = 220 + chicken.server * 112 + 46; y = 190; }
     drawChicken(chicken, x, y);
