@@ -4,6 +4,7 @@
   font-family: "Trebuchet MS", Inter, system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
+html, body { max-width: 100%; overflow-x: hidden; }
 body { margin: 0; min-height: 100vh; color: var(--ink); background: #dff3d5; }
 .app-shell { max-width: 1400px; margin: auto; padding: 24px; }
 .hero { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }.hero-actions { display: flex; align-items: center; gap: 13px; }
@@ -93,11 +94,20 @@ canvas { display: block; width: 100%; aspect-ratio: 12 / 7; }
 }
 
 @media (max-width: 700px) {
-  .app-shell { padding: 14px 10px; }
+  .app-shell { width: 100%; padding: 8px 9px 16px; }
+  .hero { margin-bottom: 7px; }
+  h1 { font-size: clamp(2rem, 10vw, 2.7rem); }
+  .tagline { max-width: 240px; font-size: .82rem; line-height: 1.2; }
+  .sun-badge { width: 50px; height: 50px; border-radius: 18px; font-size: 1.75rem; box-shadow: 0 5px 0 #dfa936; }
+  .help-button { width: 34px; height: 34px; }
+  .instructions { margin-bottom: 9px; padding: 9px 10px; }
+  .instructions h2 { display: block; margin: 0 0 5px; font-size: .98rem; }
+  .instruction-steps { gap: 4px 9px; font-size: .7rem; line-height: 1.15; }
+  .top-chicken-types { gap: 4px 9px; margin-top: 7px; padding-top: 7px; font-size: .68rem; line-height: 1.15; }
   .dashboard { gap: 14px; }
   .farm-visual { order: 1; }
   .farm-controls { order: 2; gap: 12px; }
-  .below-farm-panels { gap: 12px; margin-top: 12px; }
+  .below-farm-panels { gap: 10px; margin-top: 10px; }
   .canvas-wrap { max-height: 55vh; }
   .canvas-wrap canvas { max-height: 55vh; }
   .live-hud { position: relative; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
@@ -109,6 +119,56 @@ canvas { display: block; width: 100%; aspect-ratio: 12 / 7; }
   .play-controls { display: block; }
   .control-actions { min-width: 0; margin-top: 12px; }
   .legend { grid-column: auto; }
+}
+
+@media (max-width: 700px) {
+  /* Flatten the two desktop columns only on mobile so the primary controls can
+     sit immediately after the farm while keeping the same accessible markup. */
+  .dashboard { display: flex; flex-direction: column; gap: 10px; }
+  .farm-visual, .farm-controls { display: contents; }
+  .dashboard > .canvas-wrap,
+  .farm-visual > .canvas-wrap { order: 1; }
+  .dashboard > .feeding-control,
+  .farm-controls > .feeding-control { order: 2; }
+  .dashboard > .sidebar,
+  .farm-controls > .sidebar { order: 3; }
+  .dashboard > .live-hud,
+  .farm-controls > .live-hud { order: 4; }
+  .dashboard > .below-farm-panels,
+  .farm-visual > .below-farm-panels { order: 5; }
+  .canvas-wrap { width: 100%; border-radius: 15px; }
+  .canvas-wrap canvas { max-height: 42vh; }
+  .canvas-caption { gap: 4px; padding: 7px 9px; font-size: .66rem; white-space: nowrap; overflow: hidden; }
+  .canvas-caption span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .feeding-control { min-width: 0; margin: 0; padding: 8px 10px; border-radius: 13px; }
+  .feeding-control label { margin-bottom: 2px; font-size: .86rem; }
+  .feeding-control-row { gap: 8px; }
+  .line-button { width: 42px; height: 42px; font-size: 1.45rem; }
+  .feeding-control input[type="range"] { height: 32px; }
+  .feeding-control output { font-size: 1rem; }
+  .feeding-control .line-preview { min-height: 0; margin: 1px 0 0; font-size: .9rem; }
+  .farm-controls .sidebar { display: block; width: 100%; }
+  .play-controls { margin: 0; padding: 10px; border-radius: 13px; }
+  .play-controls h2 { margin-bottom: 5px; font-size: .96rem; }
+  .control-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 6px; }
+  .control-actions button { min-height: 46px; margin-top: 0; padding: 8px 4px; font-size: .76rem; }
+  .farm-controls .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0; }
+  .live-hud { top: auto; right: auto; left: auto; }
+  .live-hud .stat-card { min-height: 54px; padding: 7px 8px; border-radius: 12px; }
+  .live-hud .stat-card span { font-size: .62rem; }
+  .live-hud .stat-card strong { font-size: 1.05rem; }
+  .below-farm-panels { width: 100%; grid-template-columns: 1fr; }
+  .below-farm-panels .panel { padding: 11px; border-radius: 14px; }
+  .below-farm-panels .level-panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; }
+  .below-farm-panels .level-panel .panel-title-row,
+  .below-farm-panels .level-panel .status-box { grid-column: 1 / -1; }
+  .below-farm-panels .level-panel .panel-title-row { margin-bottom: 3px; }
+  .below-farm-panels .level-stat { padding: 6px 0; font-size: .73rem; }
+  .below-farm-panels .status-box { margin-top: 8px; padding: 8px; font-size: .73rem; }
+  .below-farm-panels .upgrades-panel h2 { margin-bottom: 3px; font-size: .98rem; }
+  .below-farm-panels .upgrades-panel .muted { margin-bottom: 5px; font-size: .7rem; }
+  .upgrade-list { gap: 5px; }
+  .upgrade-list span { padding: 5px 7px; font-size: .69rem; }
 }
 
 @media (min-width: 900px) {
